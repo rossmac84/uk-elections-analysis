@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK General Elections: Voting Behaviour Analysis | St. Columba's College A-Level Politics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --conservative-blue: #0087DC;
+            --labour-red: #DC241f;
+            --libdem-orange: #FAA61A;
+            --reform-teal: #12B6CF;
+            --green: #6AB023;
+            --primary-bg: #ffffff;
+            --secondary-bg: #f5f7fa;
+            --text-primary: #2c3e50;
+            --text-secondary: #5a6c7d;
+            --border-color: #e1e8ed;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--secondary-bg);
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--conservative-blue) 0%, var(--labour-red) 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        header p { font-size: 1.1em; opacity: 0.95; }
+
+        .election-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .election-btn {
+            background: white;
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .election-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .election-btn.active {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+        }
+
+        .election-btn h3 { color: var(--text-primary); margin-bottom: 8px; font-size: 1.4em; }
+        .election-btn p { color: var(--text-secondary); font-size: 0.95em; }
+        .election-btn .year {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, var(--conservative-blue), var(--labour-red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .model-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 30px 0 20px 0;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .model-tab {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            background: var(--secondary-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .model-tab:hover {
+            background: var(--primary-bg);
+            border-color: var(--accent-color);
+        }
+
+        .model-tab.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .election-content { display: none; }
+        .election-content.active { display: block; }
+        .model-content { display: none; }
+        .model-content.active { display: block; }
+
+        h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--accent-color);
+            font-size: 2em;
+        }
+
+        h3 { color: var(--text-primary); margin: 25px 0 15px 0; font-size: 1.5em; }
+        h4 { color: var(--text-secondary); margin: 20px 0 10px 0; font-size: 1.2em; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .stat-card.conservative { border-left-color: var(--conservative-blue); }
+        .stat-card.labour { border-left-color: var(--labour-red); }
+        .stat-card.libdem { border-left-color: var(--libdem-orange); }
+        .stat-card.reform { border-left-color: var(--reform-teal); }
+        .stat-card.green { border-left-color: var(--green); }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .analysis-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: var(--secondary-bg);
+            border-radius: 8px;
+        }
+
+        .analysis-section ul { margin-left: 25px; margin-top: 10px; }
+        .analysis-section li { margin: 8px 0; line-height: 1.8; }
+
+        .key-point {
+            background: #fff3cd;
+            border-left: 4px solid var(--warning-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .glossary-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .glossary-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .close-modal:hover { color: var(--text-primary); }
+
+        .glossary-term {
+            margin: 15px 0;
+            padding: 15px;
+            background: var(--secondary-bg);
+            border-radius: 8px;
+        }
+
+        .glossary-term strong {
+            color: var(--accent-color);
+            font-size: 1.1em;
+        }
+
+        .demographic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .demographic-table th,
+        .demographic-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .demographic-table th {
+            background: var(--secondary-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .demographic-table tr:hover { background: var(--secondary-bg); }
+
+        .quote-box {
+            background: #e8f4f8;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .exam-tip {
+            background: #d4edda;
+            border-left: 4px solid var(--success-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .exam-tip strong { color: var(--success-color); }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .model-tabs { flex-direction: column; }
+            .model-tab { min-width: 100%; }
+            .glossary-btn { width: 50px; height: 50px; font-size: 20px; }
+            .content-area { padding: 20px; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .election-selector, .model-tabs, .glossary-btn { display: none; }
+            .content-area { box-shadow: none; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>UK General Elections: Voting Behaviour Analysis</h1>
+        <p>A-Level Politics | Four Key Elections Through Analytical Models | St. Columba's College</p>
+    </header>
+
+    <div class="container">
+        <div class="election-selector">
+            <div class="election-btn active" data-election="1979">
+                <div class="year">1979</div>
+                <h3>End of Consensus</h3>
+                <p>Thatcher's Conservative Victory</p>
+            </div>
+            <div class="election-btn" data-election="1997">
+                <div class="year">1997</div>
+                <h3>New Labour Landslide</h3>
+                <p>Things Can Only Get Better</p>
+            </div>
+            <div class="election-btn" data-election="2019">
+                <div class="year">2019</div>
+                <h3>Get Brexit Done</h3>
+                <p>Johnson's Majority</p>
+            </div>
+            <div class="election-btn" data-election="2024">
+                <div class="year">2024</div>
+                <h3>Change</h3>
+                <p>Starmer's Labour Victory</p>
+            </div>
+        </div>
+
+        <div class="model-tabs">
+            <div class="model-tab active" data-model="overview">Overview & Statistics</div>
+            <div class="model-tab" data-model="rational">Rational Choice Model</div>
+            <div class="model-tab" data-model="context">Voting Context Model</div>
+            <div class="model-tab" data-model="ideology">Dominant Ideology Model</div>
+            <div class="model-tab" data-model="social">Social Structures Model</div>
+        </div>
+
+        <div class="content-area" id="mainContent">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <button class="glossary-btn" onclick="toggleGlossary()">?</button>
+
+        <div class="modal" id="glossaryModal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="toggleGlossary()">&times;</span>
+                <h2>Political Glossary</h2>
+                
+                <div class="glossary-term">
+                    <strong>Swing:</strong> The average change in vote share between two parties. A 5% swing means one party gained 5% while the other lost 5%, representing a 10-point gap change.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Valence Politics:</strong> Elections decided by which party voters believe is more competent at delivering shared goals (good economy, good NHS) rather than which party has better policies.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Class Dealignment:</strong> The weakening relationship between social class and voting behaviour. Working-class voters no longer automatically vote Labour; middle-class voters no longer automatically vote Conservative.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Hegemony:</strong> When one ideological worldview becomes "common sense." Thatcherism achieved hegemony 1979-1997.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Red Wall:</strong> Labour constituencies in the North and Midlands that voted Leave in 2016 and Conservative in 2019. Many returned to Labour in 2024.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Third Way:</strong> Tony Blair's ideological position combining market economics with social investment.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Neoliberalism:</strong> Economic philosophy emphasising free markets, privatisation, deregulation. Associated with Thatcher.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Populism:</strong> Political style contrasting "pure people" vs "corrupt elite." Johnson's 2019 campaign used populist rhetoric.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>UKIP (UK Independence Party):</strong> Eurosceptic party founded 1993. Won 12.6% in 2015, forced Cameron to promise EU referendum. Collapsed after Brexit achieved. Succeeded by Brexit Party (2019) then Reform UK (2024).
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Brexit Party:</strong> Founded by Nigel Farage in 2019 to deliver Brexit. Won 2.0% in 2019 election after standing down in Conservative-held seats. Rebranded as Reform UK in 2021.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Reform UK:</strong> Continuation of Brexit Party. Won 14.3% (4.1m votes) in 2024 but only 5 seats due to FPTP. Split Conservative vote decisively, helping Labour to landslide.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>FPTP (First Past the Post):</strong> UK's electoral system where candidate with most votes in each constituency wins, even without majority. Creates disproportionate results - Reform UK won 14.3% of votes but 0.8% of seats in 2024.
+                </div>
+
+                <div class="glossary-term">
+                    <strong>Tactical Voting:</strong> Voting for a candidate not because they're your first choice, but to prevent another party from winning. Highly effective in 2024 with anti-Conservative coordination between Labour and Lib Dem voters.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const elections = {
+            '1979': {
+                overview: `
+                    <h2>1979 General Election: "Winter of Discontent to Thatcherism"</h2>
+                    
+                    <h3>Election Results</h3>
+                    <table class="demographic-table">
+                        <tr>
+                            <th>Party</th>
+                            <th>Seats Won</th>
+                            <th>Vote Share (%)</th>
+                            <th>Change</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Conservative</strong></td>
+                            <td>339</td>
+                            <td>43.9%</td>
+                            <td>+62 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Labour</strong></td>
+                            <td>269</td>
+                            <td>36.9%</td>
+                            <td>-50 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Liberal</strong></td>
+                            <td>11</td>
+                            <td>13.8%</td>
+                            <td>-2 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Others</strong></td>
+                            <td>16</td>
+                            <td>5.4%</td>
+                            <td>-10 seats</td>
+                        </tr>
+                    </table>
+
+                    <div class="stats-grid">
+                        <div class="stat-card conservative">
+                            <div class="stat-label">Conservative Majority</div>
+                            <div class="stat-value">43</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Swing to Conservatives</div>
+                            <div class="stat-value">5.2%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Turnout</div>
+                            <div class="stat-value">76.0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Seats</div>
+                            <div class="stat-value">635</div>
+                        </div>
+                    </div>
+
+                    <h3>Key Statistics</h3>
+                    
+                    <h4>Regional Breakdown</h4>
+                    <table class="demographic-table">
+                        <tr>
+                            <th>Region</th>
+                            <th>Conservative</th>
+                            <th>Labour</th>
+                            <th>Liberal</th>
+                        </tr>
+                        <tr>
+                            <td>England</td>
+                            <td>276 seats</td>
+                            <td>194 seats</td>
+                            <td>10 seats</td>
+                        </tr>
+                        <tr>
+                            <td>Scotland</td>
+                            <td>22 seats</td>
+                            <td>44 seats</td>
+                            <td>3 seats</td>
+                        </tr>
+                        <tr>
+                            <td>Wales</td>
+                            <td>11 seats</td>
+                            <td>22 seats</td>
+                            <td>1 seat</td>
+                        </tr>
+                    </table>
+
+                    <div class="key-point">
+                        <strong>Historic Significance:</strong> First female Prime Minister elected. The election marked the end of the post-war consensus and the beginning of the neoliberal era in British politics.
+                    </div>
+
+                    <h4>Notable Facts</h4>
+                    <ul>
+                        <li>Margaret Thatcher became the UK's first female Prime Minister</li>
+                        <li>Largest swing to Conservatives since 1945 (5.2%)</li>
+                        <li>Labour lost 50 seats compared to October 1974</li>
+                        <li>First election following the "Winter of Discontent" (1978-79)</li>
+                        <li>Vote of no confidence passed by one vote (311-310) on 28 March 1979</li>
+                        <li>"Labour Isn't Working" advertising proved highly effective</li>
+                    </ul>
+
+                    <div class="exam-tip">
+                        <strong>Exam Tip:</strong> Emphasise the breakdown of the post-war consensus, economic crisis impact, and class dealignment beginning. Use specific statistics: 5.2% swing, 10% inflation, widespread strikes contrasted with Conservative promises.
+                    </div>
+                `,
+                rational: `
+                    <h2>Rational Choice Model: 1979</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Economic Context</h3>
+                        <ul>
+                            <li><strong>Inflation:</strong> Running at ~10% in early 1979</li>
+                            <li><strong>Unemployment:</strong> Rising to 1.3 million, highest since 1940</li>
+                            <li><strong>Strikes:</strong> 29 million working days lost in 1979</li>
+                            <li><strong>Winter of Discontent:</strong> Refuse collectors, gravediggers, hospital workers all striking</li>
+                            <li><strong>IMF Bailout Legacy:</strong> 1976 loan still damaging Labour's credibility</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Issue Salience</h3>
+                        <ul>
+                            <li><strong>Top Issue: Economy & Inflation</strong></li>
+                            <li><strong>Trade Union Power:</strong> 73% believed unions had too much power</li>
+                            <li><strong>Law and Order:</strong> Rising concern about public disorder</li>
+                            <li><strong>Taxation:</strong> Top rate 83% made tax cuts appealing</li>
+                        </ul>
+                    </div>
+
+                    <div class="quote-box">
+                        "Labour isn't working" - Conservative slogan effectively linked unemployment to Labour governance
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Valence Politics</h3>
+                        <ul>
+                            <li><strong>Economic Competence:</strong> Conservatives rated 15 points higher</li>
+                            <li><strong>Party Unity:</strong> Labour appeared divided, unable to control unions</li>
+                            <li><strong>Crisis Management:</strong> Callaghan's "Crisis? What crisis?" damaged credibility</li>
+                            <li><strong>Broken Promises:</strong> 1974 "Social Contract" with unions had failed</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Rational Choice Verdict:</strong> Voters rationally calculated Labour had failed on core competence (economy, union management). The economic crisis made the cost of continuing with Labour appear very high.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Show how voters weighed economic self-interest against traditional loyalties. Use inflation figures, strike statistics, manifesto pledges. Even traditional Labour voters could rationally choose Conservatives when unions became a liability.
+                    </div>
+                `,
+                context: `
+                    <h2>Voting Context Model: 1979</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Campaign Events</h3>
+                        <ul>
+                            <li><strong>Vote of No Confidence (28 March):</strong> Government defeated 311-310, forcing election</li>
+                            <li><strong>Callaghan's "Crisis" Moment:</strong> Appeared detached during strikes - "Crisis? What crisis?" headline</li>
+                            <li><strong>Conservative Poster Campaign:</strong> "Labour Isn't Working" became iconic</li>
+                            <li><strong>Saatchi & Saatchi:</strong> Professional campaign management set new standards</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>External Events</h3>
+                        <ul>
+                            <li><strong>Winter of Discontent:</strong> Dominated campaign context completely</li>
+                            <li><strong>Refuse Strike:</strong> Uncollected rubbish in Leicester Square symbolic</li>
+                            <li><strong>Gravediggers Strike:</strong> Unburied dead created visceral reaction</li>
+                            <li><strong>Devolution Referendums:</strong> Failed Scottish/Welsh votes weakened Callaghan</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Context Impact:</strong> Winter of Discontent transformed the landscape. Without these strikes, Callaghan's personal popularity might have delivered different result. Campaign context amplified concerns about Labour's ability to govern.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Show how short-term factors (Winter of Discontent) interacted with campaign strategies. Compare professional Saatchi & Saatchi campaign with Labour's traditional approach. "Crisis? What crisis?" moment perfect evidence of how single event can crystallise broader concerns.
+                    </div>
+                `,
+                ideology: `
+                    <h2>Dominant Ideology Model: 1979</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Collapse of Post-War Consensus</h3>
+                        <ul>
+                            <li><strong>Consensus Era (1945-1979):</strong> Keynesian economics, mixed economy, welfare state, full employment</li>
+                            <li><strong>Crisis:</strong> Stagflation challenged Keynesian assumptions</li>
+                            <li><strong>Hegemonic Shift:</strong> From social democracy to neoliberalism</li>
+                        </ul>
+                    </div>
+
+                    <div class="quote-box">
+                        "There is no alternative" (TINA) - Thatcher's phrase captured neoliberal hegemony
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Thatcherism as Emerging Ideology</h3>
+                        <ul>
+                            <li><strong>Monetarism:</strong> Control money supply to control inflation</li>
+                            <li><strong>Free Markets:</strong> Reduce state intervention, privatise</li>
+                            <li><strong>Individual Responsibility:</strong> Reject "nanny state"</li>
+                            <li><strong>Union Reform:</strong> Reduce union power</li>
+                            <li><strong>Victorian Values:</strong> Hard work, thrift, personal morality</li>
+                            <li><strong>Popular Capitalism:</strong> Spread property and share ownership</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Media and Ideological Framing</h3>
+                        <ul>
+                            <li><strong>The Sun's Switch:</strong> Switched from Labour to Conservative - critical given working-class readership. Reflected and reinforced shift towards Thatcherite ideas among working class</li>
+                            <li><strong>Daily Mail, Telegraph, Express:</strong> Strongly promoted free market economics, individual responsibility, anti-union narratives</li>
+                            <li><strong>Media Framing of Crisis:</strong> Strikes, rubbish, unburied dead framed as failure of collectivism, validating individualist alternative</li>
+                            <li><strong>Advertising Innovation:</strong> Saatchi & Saatchi's professional campaign promoted entrepreneurial, modern Conservatism vs "old-fashioned" Labour</li>
+                            <li><strong>Hegemonic Shift in Media:</strong> Press increasingly sympathetic to market-oriented ideas - reflected changing "common sense" about role of state</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Ideological Transformation:</strong> 1979 wasn't just government change but paradigm shift. The election legitimised wholesale rejection of post-war social democracy and inaugurated 18 years of Conservative hegemony based on neoliberal principles. Media played crucial role in making Thatcherism seem inevitable and necessary.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Use as "critical election" realigning British politics. Reference Gramsci's hegemony concept. Contrast with 1997 where Blair worked within Thatcherite framework. Show voter choices involve which worldview becomes "common sense."
+                    </div>
+                `,
+                social: `
+                    <h2>Social Structures Model: 1979</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Class Voting Patterns</h3>
+                        <table class="demographic-table">
+                            <tr>
+                                <th>Social Class</th>
+                                <th>Conservative %</th>
+                                <th>Labour %</th>
+                            </tr>
+                            <tr>
+                                <td>AB (Professional/Managerial)</td>
+                                <td>59%</td>
+                                <td>24%</td>
+                            </tr>
+                            <tr>
+                                <td>C1 (Lower Middle Class)</td>
+                                <td>51%</td>
+                                <td>30%</td>
+                            </tr>
+                            <tr>
+                                <td>C2 (Skilled Working Class)</td>
+                                <td>41%</td>
+                                <td>42%</td>
+                            </tr>
+                            <tr>
+                                <td>DE (Semi/Unskilled)</td>
+                                <td>33%</td>
+                                <td>49%</td>
+                            </tr>
+                        </table>
+
+                        <div class="key-point">
+                            <strong>Class Dealignment Begins:</strong> Conservative breakthrough with C2 skilled workers (41%) - traditionally Labour's heartland. Previewed "Essex Man" phenomenon of 1980s.
+                        </div>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Age and Gender</h3>
+                        <ul>
+                            <li><strong>Gender Gap:</strong> Women 4 points more Conservative than men</li>
+                            <li><strong>Age Gradient:</strong> Conservative support increased with age</li>
+                            <li><strong>Young Voters:</strong> Relatively evenly split - less attached to traditional allegiances</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Social Structures Verdict:</strong> Traditional class voting still dominant but fracturing. Conservative success among C2 workers signalled fundamental change. Housing tenure, aspirations, attitudes toward unions cutting across traditional class lines.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Show both continuity (AB 59% Tory, DE 49% Labour) and change (C2 41% Tory breakthrough). Housing tenure data demonstrates how Conservatives targeted specific social structures through Right to Buy policy.
+                    </div>
+                `
+            },
+            '1997': {
+                overview: `
+                    <h2>1997 General Election: "Things Can Only Get Better"</h2>
+                    
+                    <h3>Election Results</h3>
+                    <table class="demographic-table">
+                        <tr>
+                            <th>Party</th>
+                            <th>Seats Won</th>
+                            <th>Vote Share (%)</th>
+                            <th>Change</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Labour</strong></td>
+                            <td>418</td>
+                            <td>43.2%</td>
+                            <td>+145 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Conservative</strong></td>
+                            <td>165</td>
+                            <td>30.7%</td>
+                            <td>-178 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Liberal Democrat</strong></td>
+                            <td>46</td>
+                            <td>16.8%</td>
+                            <td>+28 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Referendum Party</strong></td>
+                            <td>0</td>
+                            <td>2.6%</td>
+                            <td>New party</td>
+                        </tr>
+                        <tr>
+                            <td><strong>UKIP</strong></td>
+                            <td>0</td>
+                            <td>0.3%</td>
+                            <td>New party</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Others</strong></td>
+                            <td>30</td>
+                            <td>6.4%</td>
+                            <td>+10 seats</td>
+                        </tr>
+                    </table>
+
+                    <div class="stats-grid">
+                        <div class="stat-card labour">
+                            <div class="stat-label">Labour Majority</div>
+                            <div class="stat-value">179</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Swing to Labour</div>
+                            <div class="stat-value">10.2%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Turnout</div>
+                            <div class="stat-value">71.4%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Seats</div>
+                            <div class="stat-value">659</div>
+                        </div>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Historic Landslide:</strong> Labour's largest ever majority (179). Conservatives' worst result since 1906. First Labour government with full parliamentary majority since 1966-70. Tony Blair aged 43 - youngest PM since 1812.
+                    </div>
+
+                    <h4>Notable Facts</h4>
+                    <ul>
+                        <li>Conservatives wiped out in Scotland and Wales - not a single seat</li>
+                        <li>Record 120 female MPs elected (101 Labour)</li>
+                        <li>10.2% swing - largest since 1945</li>
+                        <li>Seven Cabinet ministers lost seats including Michael Portillo</li>
+                        <li>New Labour had rewritten Clause IV in 1995</li>
+                        <li>Campaign used "Things Can Only Get Better" by D:Ream</li>
+                        <li>Referendum Party (Sir James Goldsmith, anti-EU) won 2.6% of vote but no seats - split some Conservative votes</li>
+                        <li>UKIP contested 194 seats, won 0.3% nationally (106,002 votes) - early stage of Eurosceptic challenge</li>
+                    </ul>
+
+                    <div class="exam-tip">
+                        <strong>Exam Tip:</strong> Exemplifies valence politics - Labour won on perceived competence, not radical policy differences. New Labour accepted Thatcherite economics but promised better public services. Scale shows multiple models at work.
+                    </div>
+                `,
+                rational: `
+                    <h2>Rational Choice Model: 1997</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Economic Context</h3>
+                        <ul>
+                            <li><strong>Black Wednesday Legacy:</strong> 16 Sept 1992 - UK forced out of ERM, destroyed Conservative economic credibility</li>
+                            <li><strong>Tax Increases:</strong> Conservatives raised taxes 22 times after 1992 promise not to</li>
+                            <li><strong>Living Standards:</strong> Despite recovery, many remembered negative equity, repossessions</li>
+                        </ul>
+                    </div>
+
+                    <div class="quote-box">
+                        "17 Conservative tax rises. Enough is enough." - Labour campaign highlighting broken promises
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Valence Politics - The Decisive Factor</h3>
+                        <ul>
+                            <li><strong>Economic Competence:</strong> Labour led by 25 points - unprecedented reversal</li>
+                            <li><strong>NHS Competence:</strong> Labour led by 40+ points</li>
+                            <li><strong>Corruption:</strong> 78% believed Conservatives "sleazy and disreputable"</li>
+                            <li><strong>Time for Change:</strong> 65% believed time for change after 18 years</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Valence Dominance:</strong> 1997 is textbook valence politics. Labour won because voters believed they'd be more competent, less corrupt. Black Wednesday destroyed Conservative valence on core competence.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows valence operating through competence perceptions. Black Wednesday perfect evidence: economic recovery didn't help because voters concluded "these crashed the pound." Compare with 2010 where crisis similarly destroyed Labour's economic competence.
+                    </div>
+                `,
+                context: `
+                    <h2>Voting Context Model: 1997</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Campaign Events</h3>
+                        <ul>
+                            <li><strong>Millbank Machine:</strong> Professional Labour campaign HQ with rapid rebuttal</li>
+                            <li><strong>Pledge Card:</strong> Five pledges on credit-card sized card - simple, memorable</li>
+                            <li><strong>Conservative Infighting:</strong> Eurosceptics publicly contradicting leadership throughout</li>
+                            <li><strong>Demon Eyes:</strong> Negative Conservative advertising backfired - seemed desperate</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Scandals</h3>
+                        <ul>
+                            <li><strong>Cash for Questions:</strong> MPs paid to ask parliamentary questions</li>
+                            <li><strong>Sexual Scandals:</strong> Multiple Conservative MPs - created "sleaze" narrative</li>
+                            <li><strong>Arms to Iraq:</strong> Scott Report revealed government deception</li>
+                        </ul>
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows how context can overwhelm fundamentals. Despite strong economic data, context (Black Wednesday legacy, sleaze, division) dominated. Campaign quality mattered - Millbank's professionalism vs Conservative chaos.
+                    </div>
+                `,
+                ideology: `
+                    <h2>Dominant Ideology Model: 1997</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>The Third Way</h3>
+                        <ul>
+                            <li><strong>Third Way Defined:</strong> Neither traditional socialism nor unfettered markets</li>
+                            <li><strong>Acceptance of Markets:</strong> Blair accepted core Thatcherite reforms</li>
+                            <li><strong>Active State:</strong> But argued for investment in public services</li>
+                            <li><strong>International Context:</strong> Clinton's New Democrats, Schröder's SPD - global centre-left renewal</li>
+                        </ul>
+                    </div>
+
+                    <div class="quote-box">
+                        "What counts is what works" - Blair, 1997 manifesto
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Media and Ideological Shift</h3>
+                        <ul>
+                            <li><strong>The Sun's Switch:</strong> "The Sun Backs Blair" (18 March 1997) - massive symbolic moment. Murdoch courted by Blair, reflected business acceptance of New Labour</li>
+                            <li><strong>Financial Times Endorsement:</strong> Gave Labour credibility with business community - signalled Third Way had won over capital</li>
+                            <li><strong>Daily Mirror, Guardian, Independent:</strong> Enthusiastically backed New Labour's modernisation project</li>
+                            <li><strong>Even Conservative Press:</strong> Daily Mail lukewarm on Major - ideological consensus across media that change needed</li>
+                            <li><strong>Media Narrative:</strong> "Time for Change" became overwhelming - but change within Thatcherite framework, not rejection of it</li>
+                            <li><strong>"Cool Britannia":</strong> Media celebration of modern, optimistic Britain - cultural shift supporting Blair's ideological positioning</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Ideological Paradox:</strong> Labour won landslide but accepted Thatcherism's framework. This wasn't betrayal but recognition Thatcher had won ideological argument. Third Way operated within Thatcherite assumptions while adding social investment. Media consensus reflected this - even traditionally Labour-hostile papers backed Blair because he wasn't threatening to capitalism.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows ideology matters differently than expected. Blair won by accepting opponent's framework. Use Clause IV removal as symbolic moment. Compare with Corbyn's Labour (2017, 2019) which rejected Thatcherism - lost both times.
+                    </div>
+                `,
+                social: `
+                    <h2>Social Structures Model: 1997</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Class Dealignment Accelerates</h3>
+                        <table class="demographic-table">
+                            <tr>
+                                <th>Social Class</th>
+                                <th>Labour %</th>
+                                <th>Conservative %</th>
+                            </tr>
+                            <tr>
+                                <td>AB (Professional)</td>
+                                <td>31%</td>
+                                <td>41%</td>
+                            </tr>
+                            <tr>
+                                <td>C1 (Lower Middle)</td>
+                                <td>37%</td>
+                                <td>26%</td>
+                            </tr>
+                            <tr>
+                                <td>C2 (Skilled Working)</td>
+                                <td>50%</td>
+                                <td>27%</td>
+                            </tr>
+                            <tr>
+                                <td>DE (Working Class)</td>
+                                <td>59%</td>
+                                <td>21%</td>
+                            </tr>
+                        </table>
+
+                        <div class="key-point">
+                            <strong>Dramatic Realignment:</strong> Labour won across ALL classes - unprecedented. Even among AB professionals, Conservatives only led by 10 points (vs 35 in 1979). Class as predictor dramatically weakened.
+                        </div>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Age Groups</h3>
+                        <ul>
+                            <li><strong>Youth Labour Surge:</strong> 18-24s backed Labour by 35-point margin</li>
+                            <li><strong>Middle-Aged Swing:</strong> 35-54s (largest bloc) backed Labour decisively</li>
+                            <li><strong>Pensioners:</strong> Only group where Conservatives led (44% vs 35%)</li>
+                        </ul>
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Perfect evidence for class dealignment. AB voters 59% Tory in 1979, only 41% in 1997. Housing tenure data shows structural changes don't automatically produce expected voting - homeownership grew but Conservatives lost homeowners.
+                    </div>
+                `
+            },
+            '2019': {
+                overview: `
+                    <h2>2019 General Election: "Get Brexit Done"</h2>
+                    
+                    <h3>Election Results</h3>
+                    <table class="demographic-table">
+                        <tr>
+                            <th>Party</th>
+                            <th>Seats Won</th>
+                            <th>Vote Share (%)</th>
+                            <th>Change</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Conservative</strong></td>
+                            <td>365</td>
+                            <td>43.6%</td>
+                            <td>+48 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Labour</strong></td>
+                            <td>202</td>
+                            <td>32.1%</td>
+                            <td>-60 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SNP</strong></td>
+                            <td>48</td>
+                            <td>3.9%</td>
+                            <td>+13 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Liberal Democrat</strong></td>
+                            <td>11</td>
+                            <td>11.6%</td>
+                            <td>-1 seat</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Green Party</strong></td>
+                            <td>1</td>
+                            <td>2.7%</td>
+                            <td>0 change</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Brexit Party</strong></td>
+                            <td>0</td>
+                            <td>2.0%</td>
+                            <td>New party</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Others</strong></td>
+                            <td>23</td>
+                            <td>4.1%</td>
+                            <td>0 change</td>
+                        </tr>
+                    </table>
+
+                    <div class="stats-grid">
+                        <div class="stat-card conservative">
+                            <div class="stat-label">Conservative Majority</div>
+                            <div class="stat-value">80</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Swing to Conservatives</div>
+                            <div class="stat-value">4.7%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Turnout</div>
+                            <div class="stat-value">67.3%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Seats</div>
+                            <div class="stat-value">650</div>
+                        </div>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Red Wall Collapse:</strong> Conservatives won 54 seats from Labour, including strongholds that had never elected Conservative MPs. Sedgefield (Blair's seat), Bishop Auckland (Labour since 1935), Bolsover (Labour since 1950) all fell.
+                    </div>
+
+                    <h4>Notable Facts</h4>
+                    <ul>
+                        <li>Largest Conservative majority since 1987</li>
+                        <li>Labour's worst result since 1935 in terms of seats</li>
+                        <li>SNP won 48 of 59 Scottish seats</li>
+                        <li>Brexit Party stood down in 317 Conservative-held seats - crucial tactical decision by Nigel Farage</li>
+                        <li>Brexit Party still won 2.0% of vote despite standing down in many seats</li>
+                        <li>Green Party won 2.7% vote share (865,707 votes) but only 1 seat (Brighton Pavilion) - FPTP impact</li>
+                        <li>Liberal Democrats won 11.6% but only 11 seats - lost seats despite increasing vote share</li>
+                        <li>First December election since 1923</li>
+                        <li>Third general election in four years</li>
+                    </ul>
+
+                    <div class="exam-tip">
+                        <strong>Exam Tip:</strong> Quintessential single-issue election. Brexit cut across traditional patterns - Rational Choice (delivering Brexit), Context (gridlock), Ideology (populism), Social Structures (Leave-voting working class abandoning Labour).
+                    </div>
+                `,
+                rational: `
+                    <h2>Rational Choice Model: 2019</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Issue Salience - Brexit Dominates</h3>
+                        <ul>
+                            <li><strong>Overwhelming Issue: Brexit</strong> - 68% said Brexit top issue</li>
+                            <li><strong>NHS:</strong> Second (42%) but overshadowed</li>
+                            <li><strong>Economy:</strong> Paradoxically low salience despite Brexit's implications</li>
+                        </ul>
+                    </div>
+
+                    <div class="quote-box">
+                        "Get Brexit Done" - Three-word slogan captured voter frustration with gridlock
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Valence Politics</h3>
+                        <ul>
+                            <li><strong>Leadership:</strong> Johnson led Corbyn by 35+ points on "best PM"</li>
+                            <li><strong>Brexit Delivery:</strong> Conservatives trusted more by 46% vs Labour 15%</li>
+                            <li><strong>Economic Competence:</strong> Conservatives led by 12 points</li>
+                            <li><strong>National Security:</strong> Corbyn's associations damaged Labour severely</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Rational Choice Verdict:</strong> For Leave voters (especially working-class), voting Conservative was rational single-issue calculation. Johnson offered to deliver their 2016 vote, Corbyn didn't. Labour's unclear position meant they couldn't credibly offer anything to either Leave or Remain voters.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows rational choice on Brexit above all. Evidence: 68% said Brexit top issue, Conservatives trusted to deliver by 46% vs 15%. But note complexity: Leave voters also wanted NHS funding, police. Compare with 2017 where May's campaign undermined rational choice.
+                    </div>
+                `,
+                context: `
+                    <h2>Voting Context Model: 2019</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Campaign Context</h3>
+                        <ul>
+                            <li><strong>Parliamentary Gridlock:</strong> Three years since referendum, three failed Brexit deadlines</li>
+                            <li><strong>Supreme Court Ruling:</strong> Prorogation ruled unlawful - embarrassment for Johnson</li>
+                            <li><strong>Brexit Party Withdrawal:</strong> Farage stood down in 317 Conservative-held seats - prevented vote splitting on Leave side</li>
+                            <li><strong>Labour Manifesto:</strong> Radical spending leaked, attacked as fantasy economics</li>
+                            <li><strong>London Bridge Attack:</strong> Final week terrorist attack helped Conservative law & order message</li>
+                            <li><strong>Lib Dem "Revoke Article 50":</strong> Jo Swinson's hardline Remain stance - won 11.6% but only 11 seats, she lost her own seat</li>
+                            <li><strong>Green Party Squeeze:</strong> Climate campaigners urged tactical voting for Labour in marginals - Greens won 2.7% but only Brighton Pavilion</li>
+                            <li><strong>Remain Fragmentation:</strong> Unlike Brexit Party/Tory coordination, Remain vote split Labour/Lib Dem/Green/SNP/Plaid</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Minor Party Impact - Decisive Factor</h3>
+                        <ul>
+                            <li><strong>Brexit Party's Strategic Retreat:</strong> Farage's November decision to stand down in Tory seats prevented Conservative losses. In 275 seats where Brexit Party did stand (mainly Labour-held), they averaged 3.6% - enough to keep some Labour seats from flipping</li>
+                            <li><strong>UKIP Irrelevance:</strong> Having achieved Brexit referendum, UKIP collapsed to 0.1% (22,817 votes total) - voters moved to Brexit Party or Conservatives</li>
+                            <li><strong>Green Tactical Dilemma:</strong> Greens advised supporters to vote tactically in 40+ marginals. Result: 865,707 votes (2.7%) nationally but only Caroline Lucas in Brighton Pavilion. FPTP brutally punishing.</li>
+                            <li><strong>Lib Dem Miscalculation:</strong> "Stop Brexit" and "Revoke Article 50" positioned them as hardline Remain but alienated soft Remainers. Won 3.7 million votes (11.6%) but only 11 seats - actually lost seats despite vote share increase</li>
+                            <li><strong>SNP Sweep:</strong> Won 48/59 Scottish seats on 45% vote share - "Stop Brexit" message resonated in Scotland (62% voted Remain 2016)</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Context Impact:</strong> Brexit Party's withdrawal was arguably decisive - modelling suggests Conservatives might have won 30-40 fewer seats without it. Remain vote fragmentation contrasted with Leave consolidation. Five-party competition (Con/Lab/Lib/Brexit/Green) created chaotic dynamics favouring largest party under FPTP.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Three years of paralysis created context where simple message resonated. Brexit Party standing down in Tory seats crucial tactical context that enabled Conservative victory.
+                    </div>
+                `,
+                ideology: `
+                    <h2>Dominant Ideology Model: 2019</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Populism vs Establishment</h3>
+                        <ul>
+                            <li><strong>Johnson's Positioning:</strong> Conservatives as party of "the people" vs "Parliament" blocking Brexit</li>
+                            <li><strong>Corbyn's Socialism:</strong> More radical than any mainstream party since 1983</li>
+                            <li><strong>Cultural Divide:</strong> Socially conservative Leave vs socially liberal Remain transcended economics</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Ideological Shift:</strong> Culture wars (Brexit, immigration, national identity) trumped economic left-right. Working-class Leave voters backed upper-class Johnson because he shared their cultural values on Brexit.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows how culture wars can trump economic divisions. Working-class Leave voters backed Johnson despite his background because cultural alignment on Brexit mattered more than class.
+                    </div>
+                `,
+                social: `
+                    <h2>Social Structures Model: 2019</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Age Polarisation Extreme</h3>
+                        <table class="demographic-table">
+                            <tr>
+                                <th>Demographic</th>
+                                <th>Conservative %</th>
+                                <th>Labour %</th>
+                            </tr>
+                            <tr>
+                                <td>Age 18-24</td>
+                                <td>21%</td>
+                                <td>56%</td>
+                            </tr>
+                            <tr>
+                                <td>Age 65+</td>
+                                <td>64%</td>
+                                <td>17%</td>
+                            </tr>
+                            <tr>
+                                <td>DE Working Class</td>
+                                <td>41%</td>
+                                <td>39%</td>
+                            </tr>
+                            <tr>
+                                <td>Leave Voters (2016)</td>
+                                <td>73%</td>
+                                <td>15%</td>
+                            </tr>
+                            <tr>
+                                <td>Remain Voters (2016)</td>
+                                <td>20%</td>
+                                <td>49%</td>
+                            </tr>
+                        </table>
+
+                        <div class="key-point">
+                            <strong>Age vs Class:</strong> 43-point gap between 18-24s and 65+ - age became stronger predictor than class. DE working class split almost evenly - class dealignment complete.
+                        </div>
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Proves age and Brexit vote stronger than class. 73% of Leave voters backed Conservatives vs only 48% of C2 workers. This cross-cutting cleavage destroyed traditional class voting. Red Wall fell because Leave voting mattered more than class history.
+                    </div>
+                `
+            },
+            '2024': {
+                overview: `
+                    <h2>2024 General Election: "Change"</h2>
+                    
+                    <h3>Election Results</h3>
+                    <table class="demographic-table">
+                        <tr>
+                            <th>Party</th>
+                            <th>Seats Won</th>
+                            <th>Vote Share (%)</th>
+                            <th>Change</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Labour</strong></td>
+                            <td>411</td>
+                            <td>33.7%</td>
+                            <td>+209 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Conservative</strong></td>
+                            <td>121</td>
+                            <td>23.7%</td>
+                            <td>-244 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Liberal Democrat</strong></td>
+                            <td>72</td>
+                            <td>12.2%</td>
+                            <td>+61 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Reform UK</strong></td>
+                            <td>5</td>
+                            <td>14.3%</td>
+                            <td>New party</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Green Party</strong></td>
+                            <td>4</td>
+                            <td>6.8%</td>
+                            <td>+3 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SNP</strong></td>
+                            <td>9</td>
+                            <td>2.5%</td>
+                            <td>-39 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Independents</strong></td>
+                            <td>6</td>
+                            <td>1.6%</td>
+                            <td>+5 seats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Others</strong></td>
+                            <td>22</td>
+                            <td>5.2%</td>
+                            <td>-1 seat</td>
+                        </tr>
+                    </table>
+
+                    <div class="stats-grid">
+                        <div class="stat-card labour">
+                            <div class="stat-label">Labour Majority</div>
+                            <div class="stat-value">174</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Swing to Labour</div>
+                            <div class="stat-value">12.0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Turnout</div>
+                            <div class="stat-value">59.9%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Seats</div>
+                            <div class="stat-value">650</div>
+                        </div>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Historic Conservative Collapse:</strong> Worst Conservative result ever (121 seats from 365). Labour won massive majority on historically low vote share (33.7%) due to Conservative vote splitting. Five Reform UK MPs marked far-right breakthrough.
+                    </div>
+
+                    <h4>Notable Facts</h4>
+                    <ul>
+                        <li>Liberal Democrats best result since 2010 (72 seats)</li>
+                        <li>Reform UK won 14.3% of vote but only 5 seats - massive FPTP distortion (Nigel Farage finally elected MP in Clacton)</li>
+                        <li>Green Party won 4 seats (Bristol Central, Waveney Valley, North Herefordshire, Brighton Pavilion) - best ever result with 6.8% vote share</li>
+                        <li>Labour won on lowest winning vote share since 1832 (33.7%)</li>
+                        <li>Lowest turnout since 2001 (59.9%) - voter disillusionment</li>
+                        <li>Seven Cabinet ministers lost seats including Liz Truss, Grant Shapps, Penny Mordaunt</li>
+                        <li>SNP collapsed to 9 seats (from 48) - Labour revival in Scotland</li>
+                        <li>Six independent MPs elected - Gaza protest votes in seats with large Muslim populations</li>
+                        <li>Jeremy Corbyn won Islington North as independent after Labour deselection</li>
+                        <li>Reform UK split Conservative vote in over 100 seats - decisive factor in Conservative collapse</li>
+                    </ul>
+
+                    <div class="exam-tip">
+                        <strong>Exam Tip:</strong> Demonstrates FPTP distortions. Labour won 63% of seats on 34% of votes. Reform won 14.3% but 5 seats (0.8%). Use to discuss valence politics (Conservative competence destroyed), "loveless landslide," collapse of two-party system.
+                    </div>
+                `,
+                rational: `
+                    <h2>Rational Choice Model: 2024</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Economic Context - Cost of Living Crisis</h3>
+                        <ul>
+                            <li><strong>Inflation:</strong> Peaked at 11.1% (October 2022) - highest since 1981</li>
+                            <li><strong>Cost of Living:</strong> Energy bills tripled, food prices up 30%</li>
+                            <li><strong>NHS Crisis:</strong> Record waiting lists (7.8 million), strikes</li>
+                            <li><strong>Liz Truss Mini-Budget:</strong> Crashed pound, spiked mortgage rates - destroyed Conservative credibility</li>
+                        </ul>
+                    </div>
+
+                    <div class="quote-box">
+                        "We have stopped the boats" - Sunak's false claim epitomised Conservative credibility problem; crossings actually increased
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Valence Politics - Conservative Credibility Destroyed</h3>
+                        <ul>
+                            <li><strong>Economic Competence:</strong> Labour led by 20+ points - Truss "risk premium"</li>
+                            <li><strong>NHS:</strong> Labour led by 35+ points</li>
+                            <li><strong>Immigration:</strong> Conservatives lost credibility despite owning issue</li>
+                            <li><strong>Time for Change:</strong> 72% believed time for change after 14 years</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Rational Choice Verdict:</strong> Most rational choice was "anyone but Conservative." Labour won by default - offering stability, no scary policies. Voters calculated even mediocre Labour preferable to continued Conservative chaos.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows "negative valence" - voting against rather than for. Liz Truss mini-budget perfect evidence: destroyed Conservative economic competence permanently. Compare to Black Wednesday 1992. Labour's low vote share (33.7%) despite landslide shows voters choosing "least worst."
+                    </div>
+                `,
+                context: `
+                    <h2>Voting Context Model: 2024</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Campaign Dominated By</h3>
+                        <ul>
+                            <li><strong>D-Day Departure:</strong> Sunak leaving D-Day 80th anniversary early to film TV interview - massive blunder alienating veterans and patriots</li>
+                            <li><strong>Betting Scandal:</strong> Conservative candidates and officials betting on election date using insider knowledge - reinforced corruption narrative</li>
+                            <li><strong>Reform UK Surge:</strong> Farage's return (reversing earlier decision not to stand) - announced he'd stand in Clacton and become party leader</li>
+                            <li><strong>Tactical Voting:</strong> Highly coordinated anti-Conservative tactical voting campaigns (tactical.vote website) - Lib Dems and Labour supporters strategically switching</li>
+                            <li><strong>Rain-Soaked Launch:</strong> Sunak's rain-soaked announcement outside Downing Street while "Things Can Only Get Better" blared from protestor's speaker - symbolically disastrous start</li>
+                            <li><strong>Green Party Breakthrough:</strong> Co-leaders Carla Denyer and Adrian Ramsay targeted specific seats with intense local campaigns</li>
+                            <li><strong>Independent Gaza Candidates:</strong> Pro-Palestine independents targeted Labour in seats with large Muslim populations - won 6 seats total</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Reform UK - The Conservative Destroyer</h3>
+                        <ul>
+                            <li><strong>Farage's Masterstroke:</strong> Announced candidacy in Clacton (11 June) - instantly became face of campaign, dominated media coverage</li>
+                            <li><strong>Vote Splitting Effect:</strong> Reform won 14.3% (4.1 million votes) nationally - came second in 98 seats, overwhelmingly splitting right-wing vote</li>
+                            <li><strong>Seats Won:</strong> Five MPs elected - Farage (Clacton), Lee Anderson (Ashfield), Richard Tice (Boston & Skegness), Rupert Lowe (Great Yarmouth), James McMurdock (South Basildon & East Thurrock)</li>
+                            <li><strong>FPTP Brutal:</strong> 14.3% vote share → 0.8% of seats (5/650) - most disproportional result in UK history for major party</li>
+                            <li><strong>Conservative Losses to Reform:</strong> In 180+ seats, Reform's vote exceeded Conservative-Labour margin - directly cost Conservatives the seat</li>
+                            <li><strong>Demographics:</strong> Reform drew heavily from working-class Leave voters, older men, coastal/post-industrial areas - exactly 2019 Red Wall Conservative coalition</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Green Party - Best Ever Performance</h3>
+                        <ul>
+                            <li><strong>Targeted Strategy:</strong> Focused resources on 4 winnable seats rather than spreading nationally - extremely effective</li>
+                            <li><strong>Victories:</strong> Bristol Central (Carla Denyer defeating Labour Shadow Culture Secretary Thangam Debbonaire), Waveney Valley, North Herefordshire, Brighton Pavilion (held)</li>
+                            <li><strong>Vote Share:</strong> 6.8% nationally (1.94 million votes) - third highest vote share after Lab/Con but only 4 seats</li>
+                            <li><strong>Youth Appeal:</strong> Strong performance among under-30s concerned about climate, Gaza, cost of living</li>
+                            <li><strong>Lib Dem Comparison:</strong> Greens won 1.9m votes → 4 seats; Lib Dems won 3.5m votes → 72 seats. Geography + targeting matters enormously under FPTP</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-section">
+                        <h3>Multi-Party Fragmentation</h3>
+                        <ul>
+                            <li><strong>Seven-Party System:</strong> Lab/Con/Lib/Reform/Green/SNP/Independents all won seats - most fragmented result ever</li>
+                            <li><strong>Vote Efficiency:</strong> Labour: 33.7% → 63.2% seats (highly efficient). Reform: 14.3% → 0.8% seats (highly inefficient). Lib Dems: 12.2% → 11.1% seats (efficient through targeting)</li>
+                            <li><strong>Tactical Voting Evidence:</strong> In 75+ Con-Lab marginals, Lib Dem vote collapsed as supporters voted Labour tactically. Similarly in Con-Lib marginals, Labour voters switched</li>
+                            <li><strong>UKIP Absent:</strong> UKIP didn't contest election - Reform UK had absorbed their support base entirely</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Context Impact:</strong> Reform UK was decisive in Conservative collapse - without Reform splitting the vote, Conservatives likely would have won 50-80 more seats. Green Party's targeted strategy showed how FPTP can be beaten with local focus. Seven-party fragmentation combined with tactical anti-Conservative voting created perfect storm.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Sunak leaving D-Day early epitomised Conservative detachment. Unlike 2019, every context factor damaged them. Rain-soaked announcement, betting scandal, D-Day - compounding negative narrative.
+                    </div>
+                `,
+                ideology: `
+                    <h2>Dominant Ideology Model: 2024</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Ideological Vacuum</h3>
+                        <ul>
+                            <li><strong>No Clear Contest:</strong> Labour's managerial centrism vs Conservative incoherence</li>
+                            <li><strong>Starmerism:</strong> Essentially "Blairism without charisma" - competent managerialism</li>
+                            <li><strong>Reform's Populism:</strong> Right-wing populism offered alternative but limited appeal</li>
+                            <li><strong>Voters Choosing on Competence:</strong> Not ideology</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-point">
+                        <strong>Ideological Collapse:</strong> 2024 shows ideological politics can disappear when one party's valence so negative. Starmer deliberately avoided ideology - "changed Labour" meant abandoning Corbynism without clear alternative vision.
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Shows ideology can disappear under valence dominance. Compare to 1979 or 1997 where ideological vision mattered. Starmer avoided ideology deliberately - contrast with Corbyn who offered clear ideology but lost.
+                    </div>
+                `,
+                social: `
+                    <h2>Social Structures Model: 2024</h2>
+                    
+                    <div class="analysis-section">
+                        <h3>Class Voting Essentially Dead</h3>
+                        <table class="demographic-table">
+                            <tr>
+                                <th>Demographic</th>
+                                <th>Labour %</th>
+                                <th>Conservative %</th>
+                                <th>Reform %</th>
+                            </tr>
+                            <tr>
+                                <td>AB Professional</td>
+                                <td>38%</td>
+                                <td>27%</td>
+                                <td>11%</td>
+                            </tr>
+                            <tr>
+                                <td>C2 Skilled Working</td>
+                                <td>36%</td>
+                                <td>20%</td>
+                                <td>19%</td>
+                            </tr>
+                            <tr>
+                                <td>DE Working Class</td>
+                                <td>37%</td>
+                                <td>17%</td>
+                                <td>21%</td>
+                            </tr>
+                            <tr>
+                                <td>Age 18-24</td>
+                                <td>44%</td>
+                                <td>8%</td>
+                                <td>6%</td>
+                            </tr>
+                            <tr>
+                                <td>Age 65+</td>
+                                <td>25%</td>
+                                <td>40%</td>
+                                <td>17%</td>
+                            </tr>
+                        </table>
+
+                        <div class="key-point">
+                            <strong>Class Dealignment Complete:</strong> Labour won similar share across all classes (36-38%). Age remained predictor but weakened. Reform taking working-class Conservative votes prevented Johnson's 2019 coalition holding.
+                        </div>
+                    </div>
+
+                    <div class="exam-tip">
+                        <strong>Exam Application:</strong> Final proof of class dealignment - Labour 38% among AB, 37% among DE (almost identical). Four-party fragmentation means social structure models explain less variation than in two-party era. Reform vote concentrated among older working-class men crucial to Labour landslide.
+                    </div>
+                `
+            }
+        };
+
+        function loadContent(election, model) {
+            const content = elections[election][model];
+            document.getElementById('mainContent').innerHTML = content;
+        }
+
+        // Election selection
+        document.querySelectorAll('.election-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const election = this.dataset.election;
+                
+                document.querySelectorAll('.election-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.model-tab').forEach(t => t.classList.remove('active'));
+                document.querySelector('.model-tab[data-model="overview"]').classList.add('active');
+                
+                loadContent(election, 'overview');
+            });
+        });
+
+        // Model tab selection
+        document.querySelectorAll('.model-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const model = this.dataset.model;
+                const activeElection = document.querySelector('.election-btn.active').dataset.election;
+                
+                document.querySelectorAll('.model-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                loadContent(activeElection, model);
+            });
+        });
+
+        // Glossary
+        function toggleGlossary() {
+            document.getElementById('glossaryModal').classList.toggle('active');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('glossaryModal');
+            if (event.target == modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Load initial content
+        loadContent('1979', 'overview');
+    </script>
+</body>
+</html>
